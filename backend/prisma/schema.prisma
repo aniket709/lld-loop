@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum AttemptStatus {
+  DRAFT
+  SUBMITTED
+  EVALUATING
+  COMPLETED
+  FAILED
+}
+
+enum SubmissionType {
+  TEXT
+}
+
+enum EvaluatorType {
+  RULE_BASED
+  LLM
+}
+
+model Problem {
+  id          String     @id @default(uuid())
+  title String           @unique
+  description String
+  difficulty  Difficulty
+  requirements Json
+
+  attempts Attempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Attempt {
+  id        String        @id @default(uuid())
+  problemId String
+  status    AttemptStatus @default(DRAFT)
+
+  problem     Problem      @relation(fields: [problemId], references: [id])
+  submission  Submission?
+  evaluation  Evaluation?
+
+  createdAt   DateTime @default(now())
+  submittedAt DateTime?
+  completedAt DateTime?
+
+  @@index([problemId])
+  @@index([status])
+}
+
+model Submission {
+  id        String         @id @default(uuid())
+  attemptId String         @unique
+  type      SubmissionType @default(TEXT)
+  content   Json
+
+  attempt   Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Evaluation {
+  id            String        @id @default(uuid())
+  attemptId     String        @unique
+  evaluatorType EvaluatorType
+
+  status        AttemptStatus
+  score         Int?
+  result        Json?
+  error         String?
+
+  attempt       Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+}
