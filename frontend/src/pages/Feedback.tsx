@@ -61,6 +61,7 @@ export default function Feedback() {
     let intervalId: ReturnType<typeof setInterval>;
 
     async function loadAttempt() {
+      if (!attemptId) return;
       try {
         const response = await getAttempt(attemptId);
 
